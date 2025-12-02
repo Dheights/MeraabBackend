@@ -4,10 +4,6 @@ echo "🚀 Starting Meraab Backend (NestJS) Production Deployment"
 # Go to NestJS project folder
 cd /home/ubuntu/Meraab-Backend/MeraabBackend || exit
 
-echo "📥 Pulling latest code..."
-git reset --hard
-git pull origin main
-
 echo "📦 Installing production dependencies..."
 npm install --only=prod
 
