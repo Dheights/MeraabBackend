@@ -21,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
+        ssl: config.get<boolean>('DB_SSL') ? { rejectUnauthorized: false } : false,
       }),
     }),
 
