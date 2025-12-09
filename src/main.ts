@@ -6,6 +6,20 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS for your frontend
+  app.enableCors({
+    origin: [
+      'https://www.merab.in',
+      'https://merab.in',
+      'https://www.merab.design',
+      'https://merab.design',
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ],
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   // Set global API prefix
   app.setGlobalPrefix('api');
 
