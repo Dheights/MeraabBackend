@@ -5,22 +5,26 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { Users } from './entity/user.entity';
 import { UserVerification } from './entity/user-verification.entity';
-import { SignupDto, VerifyOtpDto, LoginDto } from './dto/users.dto';
-import { VerificationStatus } from './interface/users.interface';
+import { SignupDto, VerifyOtpDto, LoginDto } from './dto/auth.dto';
+import { VerificationStatus } from './interface/auth.interface';
 import { generateOtp, sendOtpEmail } from '../../helper/user.helper'
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class UsersService {
+export class AuthService {
   constructor(
     @InjectRepository(Users)
     private readonly userRepo: Repository<Users>,
+
     @InjectRepository(UserVerification)
     private readonly verificationRepo: Repository<UserVerification>,
+
+    private readonly jwtService: JwtService,
   ) {}
 
   // ---------- SIGNUP ----------
@@ -126,15 +130,14 @@ export class UsersService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // If you want JWT, generate here and return token instead.
+    // Generate JWT token
+    const payload = { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, verified: user.verified };
+    const token = this.jwtService.sign(payload);
+
     return {
+      status: 200,
       message: 'Login successful',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phoneNo: user.phoneNo,
-      },
+      token
     };
   }
 

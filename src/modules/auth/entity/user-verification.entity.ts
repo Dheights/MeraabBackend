@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Users } from './user.entity';
-import { VerificationStatus } from '../interface/users.interface';
+import { VerificationStatus } from '../interface/auth.interface';
 
 @Entity('user_verification')
 export class UserVerification {
