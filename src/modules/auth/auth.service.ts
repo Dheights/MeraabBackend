@@ -65,34 +65,49 @@ export class AuthService {
     await sendOtpEmail(email, otp);
 
     return {
-      message: 'Signup successful. OTP sent to your email.',
-      userId: savedUser.id,
+      message: 'Signup successful. OTP sent.',
+      userId: user.id,
     };
   }
 
   // ---------- VERIFY OTP ----------
   async verifyOtp(dto: VerifyOtpDto) {
-    const { email, otp } = dto;
+    const { userId, otp } = dto;
 
-    const user = await this.userRepo.findOne({ where: { email } });
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Find latest pending verification for this user
+    // 🟢 CASE 1: User already verified → return token
+    if (user.verified) {
+      const payload = { id: user.id, email: user.email };
+      const token = this.jwtService.sign(payload, { expiresIn: '1d' });
+
+      return {
+        status: 200,
+        message: 'User already verified',
+        token,
+      };
+    }
+
+    // 🟢 CASE 2: User NOT verified → check OTP
     const verification = await this.verificationRepo.findOne({
-      where: { user: { id: user.id }, status: VerificationStatus.PENDING, otp },
+      where: { user: { id: userId }, status: VerificationStatus.PENDING },
       order: { otpSentAt: 'DESC' },
-      relations: ['user'],
     });
 
     if (!verification) {
+      throw new BadRequestException('No pending OTP found');
+    }
+
+    if (verification.otp !== otp) {
       throw new BadRequestException('Invalid OTP');
     }
 
-    // Optional: check OTP expiry (e.g. 10 minutes)
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-    if (verification.otpSentAt < tenMinutesAgo) {
+    // OTP expiry check
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (verification.otpSentAt < fiveMinutesAgo) {
       verification.status = VerificationStatus.EXPIRED;
       await this.verificationRepo.save(verification);
       throw new BadRequestException('OTP expired');
@@ -106,10 +121,17 @@ export class AuthService {
     user.verified = true;
     await this.userRepo.save(user);
 
+    // Generate JWT token
+    const payload = { id: user.id, email: user.email };
+    const token = this.jwtService.sign(payload, { expiresIn: '1d' });
+
     return {
+      status: 200,
       message: 'OTP verified successfully',
+      token,
     };
   }
+
 
   // ---------- LOGIN ----------
   async login(dto: LoginDto) {
@@ -132,7 +154,7 @@ export class AuthService {
 
     // Generate JWT token
     const payload = { id: user.id, name: user.name, email: user.email, phoneNo: user.phoneNo, verified: user.verified };
-    const token = this.jwtService.sign(payload);
+    const token = this.jwtService.sign(payload, { expiresIn: '1d' });
 
     return {
       status: 200,

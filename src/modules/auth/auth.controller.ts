@@ -1,7 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto, VerifyOtpDto, LoginDto, TestEmailDto } from './dto/auth.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { LoginResponse, SignupResponse, VerifyOtpResponse } from './dto/auth-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -10,23 +11,23 @@ export class AuthController {
 
   @Post('signup')
   @ApiOperation({ summary: 'Register a new user and send OTP' })
-  @ApiResponse({ status: 201, description: 'User registered and OTP sent' })
-  signup(@Body() signupDto: SignupDto) {
-    return this.authService.signup(signupDto);
+  @ApiCreatedResponse({ description: 'User registered successfully, OTP sent.', type: SignupResponse })
+  signup(@Body() dto: SignupDto) {
+    return this.authService.signup(dto);
   }
 
   @Post('verify-otp')
   @ApiOperation({ summary: 'Verify OTP for user activation' })
-  @ApiResponse({ status: 200, description: 'OTP verified successfully' })
-  verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
-    return this.authService.verifyOtp(verifyOtpDto);
+  @ApiOkResponse({ description: 'OTP verified successfully', type: VerifyOtpResponse })
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto);
   }
 
   @Post('login')
   @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
-  login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  @ApiOkResponse({ description: 'Login successful', type: LoginResponse })
+  login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
   @Post('test-email')

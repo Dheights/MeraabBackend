@@ -22,9 +22,10 @@ export class SignupDto {
 }
 
 export class VerifyOtpDto {
-  @ApiProperty({ example: "user@example.com" })
-  @IsEmail()
-  email: string;
+  @ApiProperty({ example: "c1a34b52-8f0a-4c8a-9c59-23ac49de72c1" })
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
 
   @ApiProperty({ example: "123456" })
   @IsString()
